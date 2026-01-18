@@ -60,8 +60,8 @@ const Timeline = () => {
               id: `birth-${character.id}`,
               year: character.birth_year,
               type: 'birth',
-              title: `مولد ${character.name}`,
-              description: `ولادة ${character.name} ${character.birth_place ? `في ${character.birth_place}` : ''}`,
+              title: `مولد ${character.arabic_name || character.name}`,
+              description: `ولادة ${character.arabic_name || character.name} ${character.birth_place ? `في ${character.birth_place}` : ''}`,
               character: character,
               category: character.category || 'غير محدد',
               era: character.era || 'غير محدد'
@@ -74,8 +74,8 @@ const Timeline = () => {
               id: `death-${character.id}`,
               year: character.death_year,
               type: 'death',
-              title: `وفاة ${character.name}`,
-              description: `وفاة ${character.name} ${character.death_place ? `في ${character.death_place}` : ''}`,
+              title: `وفاة ${character.arabic_name || character.name}`,
+              description: `وفاة ${character.arabic_name || character.name} ${character.death_place ? `في ${character.death_place}` : ''}`,
               character: character,
               category: character.category || 'غير محدد',
               era: character.era || 'غير محدد'
@@ -89,7 +89,7 @@ const Timeline = () => {
                 id: `event-${character.id}-${index}`,
                 year: event.year,
                 type: 'event',
-                title: event.title || `حدث في حياة ${character.name}`,
+                title: event.title || `حدث في حياة ${character.arabic_name || character.name}`,
                 description: event.description || '',
                 character: character,
                 category: character.category || 'غير محدد',
@@ -265,7 +265,7 @@ const Timeline = () => {
                           to={`/characters/${event.character.id}`}
                           className="text-primary-600 hover:text-primary-900 font-medium"
                         >
-                          {event.character.name}
+                          {event.character.arabic_name || event.character.name}
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

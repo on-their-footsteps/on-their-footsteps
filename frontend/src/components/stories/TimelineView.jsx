@@ -32,7 +32,7 @@ const TimelineView = ({ events = [] }) => {
                 {event.character && (
                   <div className="mt-4">
                     <span className="text-sm text-gray-500">الشخصية: </span>
-                    <span className="text-sm font-medium">{event.character.name}</span>
+                    <span className="text-sm font-medium">{event.character.arabic_name || event.character.name}</span>
                   </div>
                 )}
               </div>

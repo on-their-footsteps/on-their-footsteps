@@ -29,7 +29,7 @@
 
 ### 1. استنساخ المستودع
 ```bash
-git clone https://github.com/your-username/on-their-footsteps.git
+git clone https://github.com/maysaraadmin/on-their-footsteps
 cd on-their-footsteps
 ```
 

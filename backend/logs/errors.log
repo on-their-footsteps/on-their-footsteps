@@ -148,3 +148,4 @@
 {"timestamp": "2026-01-18T08:30:56.852845Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Error in cached function get_character: ", "module": "cache", "function": "wrapper", "line": 148}
 {"timestamp": "2026-01-18T08:31:54.740796Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
 {"timestamp": "2026-01-18T08:36:30.168761Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
+{"timestamp": "2026-01-18T09:40:27.810857Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}

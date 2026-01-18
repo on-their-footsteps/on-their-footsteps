@@ -218,20 +218,29 @@ export function useCharacters(options = {}) {
  * @returns {Object} Hook state and methods
  */
 export function useCharacter(identifier, options = {}) {
-  const repository = options.repository || new CharacterRepository();
+  const repository = useRef(options.repository || new CharacterRepository());
   
   const [character, setCharacter] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const previousIdentifier = useRef(identifier);
 
-  // Ref for request cancellation
+  // Refs for request tracking
   const abortControllerRef = useRef(null);
+  const isMounted = useRef(true);
 
   /**
    * Fetch character data
    */
   const fetchCharacter = useCallback(async () => {
     if (!identifier) return;
+
+    // Only update loading state on initial load or when identifier changes
+    if (initialLoad || identifier !== previousIdentifier.current) {
+      setLoading(true);
+    }
+    setError(null);
 
     // Cancel any existing request
     if (abortControllerRef.current) {
@@ -242,20 +251,28 @@ export function useCharacter(identifier, options = {}) {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setLoading(true);
-    setError(null);
-
     try {
-      const characterData = await repository.getByIdentifier(identifier);
-      setCharacter(characterData);
+      const characterData = await repository.current.getByIdentifier(identifier);
+      
+      if (isMounted.current) {
+        setCharacter(characterData);
+        setError(null);
+        options.onSuccess?.(characterData);
+      }
     } catch (err) {
-      if (err.name !== 'AbortError') {
+      if (isMounted.current && err.name !== 'AbortError') {
+        console.error('Error fetching character:', err);
         setError(err.message || 'Failed to fetch character');
+        options.onError?.(err);
       }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+        if (initialLoad) setInitialLoad(false);
+        previousIdentifier.current = identifier;
+      }
     }
-  }, [identifier, repository]);
+  }, [identifier, options, initialLoad]);
 
   /**
    * Like/unlike character
@@ -265,7 +282,7 @@ export function useCharacter(identifier, options = {}) {
     if (!character) return;
 
     try {
-      const updatedCharacter = await repository.setLike(character.id || character.slug, liked);
+      const updatedCharacter = await repository.current.setLike(character.id || character.slug, liked);
       setCharacter(updatedCharacter);
       return updatedCharacter;
     } catch (err) {
@@ -275,23 +292,9 @@ export function useCharacter(identifier, options = {}) {
   }, [character, repository]);
 
   /**
-   * Share character
-   */
-  const shareCharacter = useCallback(async () => {
-    if (!character) return;
-
-    try {
-      const result = await repository.share(character.id || character.slug);
-      return result;
-    } catch (err) {
-      setError(err.message || 'Failed to share character');
-      return null;
-    }
-  }, [character, repository]);
-
-  /**
    * Increment view count
    */
+  // Debounced view increment to prevent multiple rapid calls
   const incrementViews = useCallback(async () => {
     if (!character) {
       console.warn('Cannot increment views: No character data available');
@@ -304,10 +307,31 @@ export function useCharacter(identifier, options = {}) {
       return null;
     }
 
-    console.log(`Attempting to increment views for character: ${characterId}`);
+    // Only increment views if we haven't done so recently for this character
+    const lastViewKey = `lastView_${characterId}`;
+    const lastViewTime = localStorage.getItem(lastViewKey);
+    const now = Date.now();
     
+    // Only increment views if it's been more than 5 minutes since last view
+    if (lastViewTime && (now - parseInt(lastViewTime, 10)) < 300000) {
+      console.log('View count not incremented - too soon since last view');
+      return null;
+    }
+
     try {
-      const updatedCharacter = await repository.incrementViews(characterId);
+      console.log(`Incrementing views for character: ${characterId}`);
+      const updatedCharacter = await repository.current.incrementViews(characterId);
+      
+      // Update the last view time
+      localStorage.setItem(lastViewKey, now.toString());
+      
+      // Update the character data if still mounted
+      if (isMounted.current) {
+        setCharacter(prev => ({
+          ...prev,
+          views_count: updatedCharacter.views_count
+        }));
+      }
       console.log('Successfully incremented views:', updatedCharacter);
       setCharacter(updatedCharacter);
       return updatedCharacter;
@@ -343,19 +367,40 @@ export function useCharacter(identifier, options = {}) {
     }
   }, [character, repository]);
 
-  // Fetch character when identifier changes
-  useEffect(() => {
-    fetchCharacter();
-  }, [fetchCharacter]);
+  /**
+   * Share character
+   */
+  const shareCharacter = useCallback(async () => {
+    if (!character) return;
 
-  // Cleanup on unmount
+    try {
+      const result = await repository.current.share(character.id || character.slug);
+      return result;
+    } catch (err) {
+      setError(err.message || 'Failed to share character');
+      return null;
+    }
+  }, [character, repository]);
+
+  // Setup and cleanup
   useEffect(() => {
+    isMounted.current = true;
+    
+    // Only fetch if we don't have data or if the identifier changed
+    if (!character || identifier !== previousIdentifier.current) {
+      fetchCharacter();
+    } else if (initialLoad) {
+      setInitialLoad(false);
+    }
+    
+    // Cleanup function
     return () => {
+      isMounted.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [fetchCharacter, identifier, character, initialLoad]);
 
   return {
     // State

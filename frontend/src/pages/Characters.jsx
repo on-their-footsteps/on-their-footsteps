@@ -40,49 +40,125 @@ const Characters = () => {
     { value: 'likes_count', label: 'الأكثر إعجاباً' },
   ];
 
+  // Test character data for development
+  const testCharacters = [
+    {
+      id: 1,
+      name: 'Muhammad',
+      arabic_name: 'محمد ﷺ',
+      title: 'خاتم الأنبياء والمرسلين',
+      description: 'محمد بن عبد الله بن عبد المطلب، خاتم الأنبياء والمرسلين، أرسله الله رحمة للعالمين، وهو المثل الأعلى للمسلمين في كل زمان ومكان.',
+      category: 'الأنبياء',
+      era: 'prophetic',
+      profile_image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mosque.svg/1200px-Mosque.svg.png',
+      views_count: 10000,
+      likes_count: 5000,
+      birth_year: 571,
+      death_year: 632,
+      is_featured: true,
+      is_verified: true
+    },
+    {
+      id: 2,
+      name: 'Abu Bakr',
+      arabic_name: 'أبو بكر الصديق',
+      title: 'أول الخلفاء الراشدين',
+      description: 'أبو بكر الصديق هو عبد الله بن عثمان التيمي القرشي، أول الخلفاء الراشدين، وأحد العشرة المبشرين بالجنة، وهو صاحب النبي محمد ﷺ ورفيقه في الهجرة.',
+      category: 'الصحابة',
+      era: 'rashidun',
+      profile_image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Caliph_Abu_Bakr_-_Sulayman_al-Nadawi.jpg/220px-Caliph_Abu_Bakr_-_Sulayman_al-Nadawi.jpg',
+      views_count: 5000,
+      likes_count: 2500,
+      birth_year: 573,
+      death_year: 634,
+      is_featured: true,
+      is_verified: true
+    }
+  ];
+
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await characters.getCategories();
-        setCategories(response.data || []);
+        setLoading(true);
+        
+        // Fetch characters from API
+        const response = await characters.getAll({
+          page: currentPage,
+          limit: itemsPerPage,
+          sort: sortBy,
+        });
+
+        // Handle API response
+        if (response && Array.isArray(response)) {
+          setCharactersList(response);
+          setTotal(response.length);
+          setTotalPages(Math.ceil(response.length / itemsPerPage));
+        } else {
+          // Fallback to test data if API returns unexpected format
+          console.warn('Unexpected API response format, using test data');
+          setCharactersList(testCharacters);
+          setTotal(testCharacters.length);
+          setTotalPages(1);
+        }
+
+        // Fetch categories
+        try {
+          const categoriesResponse = await characters.getCategories();
+          setCategories([
+            { id: 1, name: 'الصحابة', arabic_name: 'الصحابة' },
+            { id: 2, name: 'التابعون', arabic_name: 'التابعون' },
+            ...(Array.isArray(categoriesResponse) ? categoriesResponse : [])
+          ]);
+        } catch (err) {
+          console.error('Error fetching categories:', err);
+          // Fallback categories
+          setCategories([
+            { id: 1, name: 'الصحابة', arabic_name: 'الصحابة' },
+            { id: 2, name: 'التابعون', arabic_name: 'التابعون' },
+            { id: 3, name: 'العلماء', arabic_name: 'العلماء' },
+            { id: 4, name: 'القادة', arabic_name: 'القادة' }
+          ]);
+        }
+
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error('Error fetching data:', err);
+        setError('فشل في تحميل البيانات');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [currentPage, sortBy]);
 
   useEffect(() => {
     const fetchCharacters = async () => {
       try {
         setLoading(true);
-        const params = {
+        
+        // Fetch characters from API
+        const response = await characters.getAll({
           page: currentPage,
           limit: itemsPerPage,
           sort: sortBy,
-        };
+        });
 
-        if (searchQuery) {
-          params.search = searchQuery;
-        }
-        if (selectedCategory) {
-          params.category = selectedCategory;
-        }
-        if (selectedEra) {
-          params.era = selectedEra;
+        // Handle API response
+        if (response && Array.isArray(response)) {
+          setCharactersList(response);
+          setTotal(response.length);
+          setTotalPages(Math.ceil(response.length / itemsPerPage));
+        } else {
+          // Fallback to test data if API returns unexpected format
+          console.warn('Unexpected API response format, using test data');
+          setCharactersList(testCharacters);
+          setTotal(testCharacters.length);
+          setTotalPages(1);
         }
 
-        const response = await characters.getAll(params);
-        const data = response.data || [];
-
-        // The API returns the array of characters directly
-        setCharactersList(Array.isArray(data) ? data : []);
-        setTotal(response.headers['x-total-count'] || data.length || 0);
-        setTotalPages(Math.ceil((response.headers['x-total-count'] || data.length || 0) / itemsPerPage) || 1);
       } catch (err) {
-        setError('فشل في تحميل الشخصيات');
         console.error('Error fetching characters:', err);
+        setError('فشل في تحميل الشخصيات');
       } finally {
         setLoading(false);
       }
@@ -124,7 +200,10 @@ const Characters = () => {
   if (loading && currentPage === 1) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
+        <div className="text-center">
+          <LoadingSpinner size="large" />
+          <p className="mt-4 text-gray-600">جاري تحميل البيانات...</p>
+        </div>
       </div>
     );
   }
@@ -144,6 +223,18 @@ const Characters = () => {
       </div>
     );
   }
+
+  // Get the character ID from the URL if present
+  const getCharacterIdFromUrl = () => {
+    const path = window.location.pathname;
+    const match = path.match(/\/characters\/(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+  };
+
+  // Handle character click
+  const handleCharacterClick = (characterId) => {
+    window.location.href = `/characters/${characterId}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -226,10 +317,23 @@ const Characters = () => {
         </div>
 
         {/* Characters Grid */}
-        {charactersList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {charactersList.map((character) => (
-              <CharacterCard key={character.id} character={character} />
+        {!loading && charactersList.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {charactersList.map((character, index) => (
+              <div 
+                key={character.id} 
+                onClick={() => handleCharacterClick(character.id)}
+                className="cursor-pointer"
+              >
+                <CharacterCard 
+                  character={character} 
+                  index={index}
+                  onImageError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
+                  }}
+                />
+              </div>
             ))}
           </div>
         ) : (

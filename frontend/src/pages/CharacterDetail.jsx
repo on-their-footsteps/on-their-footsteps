@@ -19,11 +19,12 @@ const CharacterTimeline = lazy(() => import('../components/CharacterTimeline'));
 
 const CharacterDetail = () => {
   const { idOrSlug } = useParams()
-  const id = idOrSlug; // For backward compatibility
+  // Ensure we're using the correct ID from the URL and it's a valid number
+  const id = !isNaN(parseInt(idOrSlug)) ? parseInt(idOrSlug) : idOrSlug;
   const [activeTab, setActiveTab] = useState('story')
   const [bookmarked, setBookmarked] = useState(false)
   
-  // Use the new character hook
+  // Use the new character hook with error boundaries
   const { 
     character, 
     loading, 
@@ -32,14 +33,34 @@ const CharacterDetail = () => {
     shareCharacter, 
     incrementViews,
     clearError 
-  } = useCharacter(id)
-
-  // Increment views when character loads
-  useEffect(() => {
-    if (character && !loading) {
-      incrementViews()
+  } = useCharacter(id, {
+    onError: (err) => {
+      console.error('Error loading character:', err);
+    },
+    onSuccess: (data) => {
+      console.log('Character loaded successfully:', data?.name || 'Unknown character');
     }
-  }, [character, loading, incrementViews])
+  })
+
+  // Increment views when character loads - only once per session
+  useEffect(() => {
+    if (!id) return; // Don't proceed if no valid ID
+    
+    const viewKey = `character_${id}_viewed`;
+    const hasViewed = sessionStorage.getItem(viewKey);
+    
+    if (!hasViewed && character?.id === id) { // Only increment if the character matches the URL ID
+      console.log('Incrementing views for character:', id);
+      incrementViews().then(updatedChar => {
+        if (updatedChar) {
+          sessionStorage.setItem(viewKey, 'true');
+          console.log('Views incremented successfully');
+        }
+      }).catch(err => {
+        console.error('Failed to increment views:', err);
+      });
+    }
+  }, [id, character?.id, incrementViews])
 
   // Handle bookmark toggle
   const handleBookmarkToggle = async () => {
@@ -84,19 +105,20 @@ const CharacterDetail = () => {
     clearError()
   }
 
-  // Loading state
-  if (loading) {
+  // Show loading state only on initial load
+  if (loading && !character) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
         <LoadingSpinner size="large" />
+        <span className="mr-4 text-lg">جاري تحميل بيانات الشخصية...</span>
       </div>
     )
   }
 
   // Error state
-  if (error) {
+  if (error && !character) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center p-4">
         <ErrorDisplay 
           error={error} 
           onRetry={handleRetry}
@@ -106,17 +128,20 @@ const CharacterDetail = () => {
     )
   }
 
-  // No character found
-  if (!character) {
+  // No character found after loading
+  if (!character && !loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-        <ErrorDisplay 
-          error={{ message: 'لم يتم العثور على الشخصية' }} 
-          onRetry={handleRetry}
-          title="الشخصية غير موجودة"
-        />
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">لم يتم العثور على الشخصية</h2>
+        <p className="text-gray-600 mb-6">عذراً، تعذر تحميل بيانات الشخصية المطلوبة.</p>
+        <button 
+          onClick={() => window.history.back()}
+          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          العودة للخلف
+        </button>
       </div>
-    )
+    );
   }
 
   return (

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import bleach
 
@@ -213,23 +213,54 @@ class SecurityManager:
 # Dependency to get current user
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current authenticated user from JWT token"""
+    from .database import get_db
+    from .models import User
+    
     token = credentials.credentials
     payload = SecurityManager.verify_token(token)
     
-    # In a real application, you would fetch user from database
-    # For now, return a mock user
-    user_id = payload.get("sub")
-    if user_id is None:
+    user_email = payload.get("sub")
+    if user_email is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials"
         )
     
-    return {
-        "id": user_id,
-        "username": payload.get("username"),
-        "email": payload.get("email")
-    }
+    # Get database session
+    db_gen = get_db()
+    db = next(db_gen)
+    
+    try:
+        # Fetch user from database
+        user = db.query(User).filter(User.email == user_email).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Inactive user"
+            )
+        
+        return user
+    finally:
+        db.close()
+
+# Export convenience functions
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return SecurityManager.verify_password(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return SecurityManager.hash_password(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create JWT access token"""
+    return SecurityManager.create_access_token(data, expires_delta)
 
 # Security headers middleware
 def add_security_headers(request: Request, call_next):

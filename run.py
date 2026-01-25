@@ -93,7 +93,8 @@ class ProcessManager:
         name: str = "CMD", 
         color: str = 'white',
         retries: int = 3,
-        health_check: bool = False
+        health_check: bool = False,
+        env: dict = None
     ) -> Optional[ProcessInfo]:
         """Run a command and capture its output with retry logic."""
         def enqueue_output(pipe, source, is_error=False):
@@ -120,7 +121,8 @@ class ProcessManager:
                     bufsize=1,
                     universal_newlines=True,
                     shell=sys.platform == 'win32',
-                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == 'win32' else 0
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == 'win32' else 0,
+                    env=env or os.environ
                 )
                 
                 # Create process info
@@ -214,7 +216,8 @@ class ProcessManager:
             cwd=str(BACKEND_DIR),
             name="BACKEND",
             color='blue',
-            health_check=True
+            health_check=True,
+            env=backend_env
         )
 
     def start_frontend(self) -> Optional[ProcessInfo]:
@@ -234,13 +237,20 @@ class ProcessManager:
             if install and install.process:
                 install.process.wait()
         
+        # Set environment variables for proper Unicode handling
+        env = os.environ.copy()
+        if platform.system() == 'Windows':
+            env['PYTHONIOENCODING'] = 'utf-8'
+            env['NODE_OPTIONS'] = '--max-old-space-size=4096'
+        
         # Start the frontend process
         return self.run_command(
             ['npm', 'run', 'dev', '--', '--host'],
             cwd=str(FRONTEND_DIR),
             name="FRONTEND",
             color='magenta',
-            health_check=True
+            health_check=True,
+            env=env
         )
 
     def stop_process(self, proc_info: ProcessInfo, timeout: int = 10) -> bool:
@@ -378,9 +388,9 @@ def main():
         manager.cleanup()
 
 if __name__ == "__main__":
-    print(f"\n{COLORS['green']}🚀 Starting On Their Footsteps Application...{COLORS['end']}")
-    print(f"{COLORS['blue']}🔵 Backend: http://localhost:8000{COLORS['end']}")
-    print(f"{COLORS['magenta']}🟣 Frontend: http://localhost:3000{COLORS['end']}")
+    print(f"\n{COLORS['green']}Starting On Their Footsteps Application...{COLORS['end']}")
+    print(f"{COLORS['blue']}Backend: http://localhost:8000{COLORS['end']}")
+    print(f"{COLORS['magenta']}Frontend: http://localhost:3000{COLORS['end']}")
     print(f"{COLORS['gray']}Press Ctrl+C to stop all servers{COLORS['end']}\n")
     
     try:

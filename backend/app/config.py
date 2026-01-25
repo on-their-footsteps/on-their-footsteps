@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 import secrets
-from pydantic import validator
 
 class Settings(BaseSettings):
     # Database
@@ -48,11 +47,5 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
         extra = "allow"  # Allow extra fields from .env
-        
-        @validator('SECRET_KEY')
-        def validate_secret_key(cls, v):
-            if v == "your-secret-key-change-in-production":
-                raise ValueError('SECRET_KEY must be changed in production')
-            return v
 
 settings = Settings()

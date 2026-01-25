@@ -17,18 +17,19 @@ class AuthService {
    * @param {Object} credentials - Login credentials
    * @param {string} credentials.email - User email
    * @param {string} credentials.password - User password
+   * @param {boolean} credentials.isGuest - Guest mode flag
    * @returns {Promise<Object>} Authentication result
    */
   async login(credentials) {
     try {
       const response = await this.api.post('/auth/login', credentials);
-      const { token, user } = response.data;
+      const { access_token, user } = response.data;
       
       // Store token and user data
-      this.apiService.setToken(token);
+      this.apiService.setToken(access_token);
       this.apiService.setUser(user);
       
-      return { success: true, user, token };
+      return { success: true, user, token: access_token };
     } catch (error) {
       return { 
         success: false, 
@@ -45,13 +46,13 @@ class AuthService {
   async register(userData) {
     try {
       const response = await this.api.post('/auth/register', userData);
-      const { token, user } = response.data;
+      const { access_token, user } = response.data;
       
       // Store token and user data
-      this.apiService.setToken(token);
+      this.apiService.setToken(access_token);
       this.apiService.setUser(user);
       
-      return { success: true, user, token };
+      return { success: true, user, token: access_token };
     } catch (error) {
       return { 
         success: false, 
@@ -75,9 +76,6 @@ class AuthService {
       // Clear local storage
       this.apiService.removeToken();
       this.apiService.removeUser();
-      
-      // Navigate to login
-      this.apiService.navigateToLogin();
     }
     
     return { success: true };
@@ -116,12 +114,12 @@ class AuthService {
   async refreshToken() {
     try {
       const response = await this.api.post('/auth/refresh');
-      const { token } = response.data;
+      const { access_token } = response.data;
       
       // Update stored token
-      this.apiService.setToken(token);
+      this.apiService.setToken(access_token);
       
-      return { success: true, token };
+      return { success: true, token: access_token };
     } catch (error) {
       // If refresh fails, logout user
       await this.logout();
@@ -239,6 +237,9 @@ class AuthService {
    * @returns {string} Error message
    */
   _extractErrorMessage(error) {
+    if (error.response?.data?.detail) {
+      return error.response.data.detail;
+    }
     if (error.response?.data?.message) {
       return error.response.data.message;
     }

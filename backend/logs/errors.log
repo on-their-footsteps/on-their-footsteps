@@ -151,3 +151,5 @@
 {"timestamp": "2026-01-18T09:40:27.810857Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
 {"timestamp": "2026-01-18T09:55:56.291047Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
 {"timestamp": "2026-01-18T10:21:07.223091Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
+{"timestamp": "2026-01-25T09:58:19.073064Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}
+{"timestamp": "2026-01-25T10:16:15.906726Z", "level": "\u001b[31mERROR\u001b[0m", "logger": "app.cache", "message": "Failed to connect to Redis: Timeout connecting to server", "module": "cache", "function": "_initialize", "line": 37}

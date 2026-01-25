@@ -9,6 +9,8 @@ import threading
 import platform
 import psutil
 import requests
+import traceback
+import re
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
 from queue import Queue, Empty
@@ -55,6 +57,8 @@ class ProcessInfo:
         self.max_retries = 3
         self.health_check_url = None
         self.last_health_check = 0
+        self.error_log = []  # Store detailed error information
+        self.command = []  # Store the command that was run
 
 class ProcessManager:
     def __init__(self):
@@ -77,7 +81,8 @@ class ProcessManager:
             'ERROR': 'red',
             'WARN': 'yellow',
             'INFO': 'white',
-            'DEBUG': 'gray'
+            'DEBUG': 'gray',
+            'CRITICAL': 'magenta'
         }.get(level, 'white')
         
         with self.log_lock:
@@ -85,6 +90,34 @@ class ProcessManager:
             colored_level = f"{COLORS[level_color]}{level:5}{COLORS['end']}"
             log_message = f"[{timestamp}] {colored_level} | {colored_source} | {message}"
             self.log_queue.put(log_message + '\n')
+            
+            # Store errors in process info for analysis
+            if level in ['ERROR', 'CRITICAL'] and source != 'SYSTEM':
+                for proc_info in self.processes:
+                    if source.startswith(proc_info.name):
+                        proc_info.error_log.append({
+                            'timestamp': timestamp,
+                            'message': message,
+                            'level': level
+                        })
+                        # Keep only last 20 errors per process
+                        if len(proc_info.error_log) > 20:
+                            proc_info.error_log.pop(0)
+
+    def categorize_error(self, message: str, source: str) -> str:
+        """Categorize errors based on keywords."""
+        error_keywords = {
+            'connection refused': 'CRITICAL',
+            'timeout': 'ERROR',
+            'not found': 'ERROR',
+            'permission denied': 'ERROR'
+        }
+        
+        for keyword, level in error_keywords.items():
+            if keyword in message.lower():
+                return level
+        
+        return 'ERROR'
 
     def run_command(
         self, 
@@ -103,6 +136,9 @@ class ProcessManager:
                     line = pipe.readline()
                     if line:
                         level = 'ERROR' if is_error else 'INFO'
+                        # Enhanced error detection and categorization
+                        if is_error:
+                            level = self.categorize_error(line.strip(), source)
                         self.log(line.strip(), source, color, level)
                     else:
                         time.sleep(0.1)
@@ -129,6 +165,7 @@ class ProcessManager:
                 proc_info = ProcessInfo(process, name, color, time.time())
                 proc_info.retry_count = attempt - 1
                 proc_info.health_check_url = self.health_checks.get(name)
+                proc_info.command = command
                 
                 # Start output capture threads
                 threading.Thread(
@@ -162,6 +199,109 @@ class ProcessManager:
                     return None
         
         return None
+
+    def analyze_errors(self, proc_info: ProcessInfo) -> Dict[str, Any]:
+        """Analyze error patterns and provide actionable suggestions."""
+        if not proc_info.error_log:
+            return {'status': 'no_errors'}
+        
+        recent_errors = proc_info.error_log[-5:]  # Last 5 errors
+        error_patterns = {
+            'import_errors': [],
+            'database_errors': [],
+            'network_errors': [],
+            'permission_errors': [],
+            'syntax_errors': [],
+            'other_errors': []
+        }
+        
+        for error in recent_errors:
+            msg = error['message'].lower()
+            if 'import' in msg or 'module' in msg:
+                error_patterns['import_errors'].append(error)
+            elif 'database' in msg or 'sql' in msg or 'connection' in msg:
+                error_patterns['database_errors'].append(error)
+            elif 'network' in msg or 'timeout' in msg or 'connection refused' in msg:
+                error_patterns['network_errors'].append(error)
+            elif 'permission' in msg or 'access denied' in msg:
+                error_patterns['permission_errors'].append(error)
+            elif 'syntax' in msg or 'invalid' in msg:
+                error_patterns['syntax_errors'].append(error)
+            else:
+                error_patterns['other_errors'].append(error)
+        
+        return {
+            'status': 'errors_found',
+            'patterns': error_patterns,
+            'total_errors': len(proc_info.error_log),
+            'recent_count': len(recent_errors)
+        }
+    
+    def get_error_suggestions(self, error_analysis: Dict[str, Any], process_name: str) -> List[str]:
+        """Provide actionable suggestions based on error analysis."""
+        suggestions = []
+        
+        if error_analysis['status'] == 'no_errors':
+            return suggestions
+        
+        patterns = error_analysis['patterns']
+        
+        if patterns['import_errors']:
+            suggestions.append(f"{COLORS['yellow']}📝 Import Error Fix:{COLORS['end']}")
+            suggestions.append(f"  • Check if all required packages are installed: {COLORS['cyan']}pip install -r requirements.txt{COLORS['end']}")
+            suggestions.append(f"  • Verify Python path: {COLORS['cyan']}echo $PYTHONPATH{COLORS['end']}")
+            suggestions.append(f"  • Check for circular imports in your code")
+        
+        if patterns['database_errors']:
+            suggestions.append(f"{COLORS['yellow']}🗄️ Database Error Fix:{COLORS['end']}")
+            suggestions.append(f"  • Check database connection: {COLORS['cyan']}sqlite3 ./on_their_footsteps.db{COLORS['end']}")
+            suggestions.append(f"  • Verify database permissions and disk space")
+            suggestions.append(f"  • Check if database file exists and is writable")
+        
+        if patterns['network_errors']:
+            suggestions.append(f"{COLORS['yellow']}🌐 Network Error Fix:{COLORS['end']}")
+            suggestions.append(f"  • Check if ports 8000/3000 are free: {COLORS['cyan']}netstat -an | findstr :8000{COLORS['end']}")
+            suggestions.append(f"  • Try killing processes on these ports: {COLORS['cyan']}taskkill /F /IM python.exe{COLORS['end']}")
+            suggestions.append(f"  • Check firewall settings")
+        
+        if patterns['permission_errors']:
+            suggestions.append(f"{COLORS['yellow']}🔒 Permission Error Fix:{COLORS['end']}")
+            suggestions.append(f"  • Run as administrator if needed")
+            suggestions.append(f"  • Check file/directory permissions: {COLORS['cyan']}ls -la{COLORS['end']}")
+            suggestions.append(f"  • Verify current user has write access")
+        
+        if patterns['syntax_errors']:
+            suggestions.append(f"{COLORS['yellow']}✨ Syntax Error Fix:{COLORS['end']}")
+            suggestions.append(f"  • Check Python syntax: {COLORS['cyan']}python -m py_compile <file>{COLORS['end']}")
+            suggestions.append(f"  • Look for missing colons, brackets, or quotes")
+            suggestions.append(f"  • Verify indentation is correct")
+        
+        return suggestions
+    
+    def print_error_summary(self, proc_info: ProcessInfo):
+        """Print a comprehensive error summary with suggestions."""
+        analysis = self.analyze_errors(proc_info)
+        
+        if analysis['status'] == 'no_errors':
+            return
+        
+        print(f"\n{COLORS['magenta']}⚠️  ERROR ANALYSIS FOR {proc_info.name.upper()}  ⚠️{COLORS['end']}")
+        print(f"{COLORS['cyan']}Total Errors: {analysis['total_errors']} | Recent: {analysis['recent_count']}{COLORS['end']}")
+        
+        suggestions = self.get_error_suggestions(analysis, proc_info.name)
+        if suggestions:
+            print(f"\n{COLORS['green']}💡 QUICK FIXES:{COLORS['end']}")
+            for suggestion in suggestions:
+                print(suggestion)
+        
+        # Show last 3 errors for context
+        print(f"\n{COLORS['yellow']}📋 RECENT ERRORS:{COLORS['end']}")
+        for error in proc_info.error_log[-3:]:
+            print(f"  {COLORS['red']}•{COLORS['end']} [{error['timestamp']}] {error['message'][:100]}...")
+        
+        print(f"\n{COLORS['blue']}🔧 COMMAND THAT FAILED:{COLORS['end']}")
+        print(f"  {COLORS['cyan']}{' '.join(proc_info.command)}{COLORS['end']}")
+        print("\n" + "="*60 + "\n")
 
     def check_process_health(self, proc_info: ProcessInfo) -> bool:
         """Check if a process is healthy by making an HTTP request to its health endpoint."""
@@ -198,6 +338,19 @@ class ProcessManager:
                     raise
             
         except Exception as e:
+            # For frontend, try alternative port if main port fails
+            if proc_info.name == 'FRONTEND' and '3000' in proc_info.health_check_url:
+                try:
+                    alternative_url = proc_info.health_check_url.replace(':3000', ':3001')
+                    response = requests.get(alternative_url, timeout=5)
+                    if response.status_code == 200:
+                        # Update the health check URL to the working port
+                        proc_info.health_check_url = alternative_url
+                        self.health_checks['FRONTEND'] = alternative_url
+                        return True
+                except:
+                    pass
+            
             self.log(f"Health check failed for {proc_info.name}: {str(e)}", 
                     proc_info.name, 'yellow', 'WARN')
             return False
@@ -318,6 +471,8 @@ def main():
         backend = manager.start_backend()
         if not backend or not backend.process:
             manager.log("Failed to start backend server. Exiting...", "ERROR", 'red')
+            if backend:
+                manager.print_error_summary(backend)
             sys.exit(1)
         
         # Wait for backend to be ready
@@ -326,13 +481,21 @@ def main():
         frontend = manager.start_frontend()
         if not frontend or not frontend.process:
             manager.log("Failed to start frontend server. Exiting...", "ERROR", 'red')
+            if frontend:
+                manager.print_error_summary(frontend)
             sys.exit(1)
         
         # Open browser after a short delay
         def open_browser():
             time.sleep(5)  # Give servers time to start
             try:
-                webbrowser.open('http://localhost:3000')
+                # Try port 3000 first, then 3001
+                for port in [3000, 3001]:
+                    try:
+                        webbrowser.open(f'http://localhost:{port}')
+                        break
+                    except:
+                        continue
             except Exception as e:
                 manager.log(f"Failed to open browser: {str(e)}", "WARN", 'yellow')
         
@@ -364,12 +527,16 @@ def main():
                                 if proc_info.retry_count < proc_info.max_retries:
                                     proc_info.retry_count += 1
                                     manager.stop_process(proc_info)
+                                    # Print error analysis before restart
+                                    manager.print_error_summary(proc_info)
                                     # Restart the process (implementation depends on your needs)
                                 else:
                                     manager.log(
                                         f"Max retries reached for {proc_info.name}, giving up",
                                         proc_info.name, 'red', 'ERROR'
                                     )
+                                    # Print final error analysis
+                                    manager.print_error_summary(proc_info)
                                     manager.running = False
                     last_health_check = current_time
                 
@@ -384,13 +551,18 @@ def main():
         manager.log(f"Fatal error: {str(e)}", "ERROR", 'red')
         import traceback
         manager.log(traceback.format_exc(), "ERROR", 'red')
+        
+        # Print error analysis for all processes
+        for proc_info in manager.processes:
+            if proc_info.error_log:
+                manager.print_error_summary(proc_info)
     finally:
         manager.cleanup()
 
 if __name__ == "__main__":
     print(f"\n{COLORS['green']}Starting On Their Footsteps Application...{COLORS['end']}")
     print(f"{COLORS['blue']}Backend: http://localhost:8000{COLORS['end']}")
-    print(f"{COLORS['magenta']}Frontend: http://localhost:3000{COLORS['end']}")
+    print(f"{COLORS['magenta']}Frontend: http://localhost:3000 (or 3001 if 3000 is busy){COLORS['end']}")
     print(f"{COLORS['gray']}Press Ctrl+C to stop all servers{COLORS['end']}\n")
     
     try:

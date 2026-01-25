@@ -25,7 +25,7 @@ import time
 import uuid
 
 from .database import init_db, get_db
-from .api import characters, progress, stats, auth, content, users, media, analytics, recommendations, performance, admin, levels, learning_paths
+from .api import characters, progress, stats, auth, content, users, media, analytics, recommendations, performance, admin, levels, learning_paths, content_pipeline
 from .config import settings
 from .logging_config import get_logger, log_api_request, log_api_response, log_security_event
 
@@ -93,18 +93,14 @@ async def lifespan(app: FastAPI):
         db.close()
         logger.info("Database connection test successful")
         
-        # Test Redis connection
-        if CACHE_AVAILABLE and cache.is_available():
-            cache.redis_client.ping()
-            logger.info("Redis connection test successful")
-            
-            # Initialize rate limiter with Redis
-            if RATE_LIMITING_AVAILABLE:
-                set_rate_limiter(cache.redis_client)
-                set_ip_blocker(cache.redis_client)
-                logger.info("Rate limiting initialized with Redis")
-        else:
-            logger.warning("Redis not available - caching and rate limiting disabled")
+        # Initialize rate limiter without Redis
+        if RATE_LIMITING_AVAILABLE:
+            # Initialize rate limiter without Redis
+            set_rate_limiter(None)
+            set_ip_blocker(None)
+            logger.info("Rate limiting initialized without Redis (in-memory only)")
+        
+        logger.info("Redis is disabled - using in-memory solutions where available")
         
     except Exception as e:
         logger.error(f"Startup failed: {e}")
@@ -285,6 +281,7 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"]
 app.include_router(recommendations.router, prefix="/api/recommendations", tags=["Recommendations"])
 app.include_router(performance.router, prefix="/api/performance", tags=["Performance"])
 app.include_router(learning_paths.router, tags=["Learning Paths"])
+app.include_router(content_pipeline.router, prefix="/api/content_pipeline", tags=["Content Pipeline"])
 
 @app.get("/")
 async def root():

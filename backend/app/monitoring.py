@@ -254,28 +254,15 @@ class HealthChecker:
             }
     
     @staticmethod
-    def check_redis_health() -> Dict[str, Any]:
-        """Check Redis health"""
-        try:
-            from ..cache import cache
-            if cache.is_available():
-                # Test Redis connection
-                cache.redis_client.ping()
-                return {
-                    'status': 'healthy',
-                    'connected': True,
-                    'memory_usage': cache.redis_client.info().get('used_memory_human', '0B')
-                }
-            else:
-                return {
-                    'status': 'unhealthy',
-                    'error': 'Redis not available'
-                }
-        except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e)
-            }
+    def check_cache_health() -> Dict[str, Any]:
+        """Check in-memory cache health"""
+        from ..cache import cache
+        return {
+            'status': 'healthy',
+            'type': 'in-memory',
+            'max_size': cache._cache.maxsize,
+            'current_size': len(cache._cache)
+        }
     
     @staticmethod
     def check_system_health() -> Dict[str, Any]:
@@ -313,7 +300,7 @@ async def get_metrics() -> Dict[str, Any]:
         'metrics': monitor.get_metrics_summary(),
         'health': {
             'database': HealthChecker.check_database_health(),
-            'redis': HealthChecker.check_redis_health(),
+            'cache': HealthChecker.check_cache_health(),
             'system': HealthChecker.check_system_health()
         }
     }

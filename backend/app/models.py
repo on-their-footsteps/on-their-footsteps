@@ -303,3 +303,245 @@ class UserLessonProgress(Base):
     # Relationships
     user = relationship("User", back_populates="lesson_progress")
     lesson = relationship("Lesson", back_populates="user_progress")
+
+# Team Management Models
+class Role(Base):
+    __tablename__ = "roles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text)
+    permissions = Column(JSON)  # List of permission strings
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    team_members = relationship("TeamMember", back_populates="role")
+
+class TeamMember(Base):
+    __tablename__ = "team_members"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    department = Column(String(100))
+    bio = Column(Text)
+    avatar_url = Column(String(500))
+    is_active = Column(Boolean, default=True)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    role = relationship("Role", back_populates="team_members")
+    assigned_tasks = relationship("Task", back_populates="assignee")
+    created_projects = relationship("Project", back_populates="created_by")
+    approvals = relationship("ContentApproval", back_populates="reviewer")
+
+class Project(Base):
+    __tablename__ = "projects"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    status = Column(String(50), default="planning")  # planning, active, completed, cancelled
+    priority = Column(String(20), default="medium")  # low, medium, high
+    start_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True))
+    created_by_id = Column(Integer, ForeignKey("team_members.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    created_by = relationship("TeamMember", back_populates="created_projects")
+    tasks = relationship("Task", back_populates="project")
+    productions = relationship("ContentProduction", back_populates="project")
+
+class Task(Base):
+    __tablename__ = "tasks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    status = Column(String(50), default="todo")  # todo, in_progress, review, completed
+    priority = Column(String(20), default="medium")
+    due_date = Column(DateTime(timezone=True))
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    assignee_id = Column(Integer, ForeignKey("team_members.id"))
+    created_by_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    project = relationship("Project", back_populates="tasks")
+    assignee = relationship("TeamMember", back_populates="assigned_tasks")
+    creator = relationship("User")
+
+class ContentApproval(Base):
+    __tablename__ = "content_approvals"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    content_type = Column(String(50), nullable=False)  # character, story, script, etc.
+    content_id = Column(Integer, nullable=False)
+    reviewer_id = Column(Integer, ForeignKey("team_members.id"))
+    status = Column(String(50), default="pending")  # pending, approved, rejected
+    review_notes = Column(Text)
+    reviewed_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    reviewer = relationship("TeamMember", back_populates="approvals")
+
+# Content Pipeline Models
+class ContentTemplate(Base):
+    __tablename__ = "content_templates"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text)
+    template_type = Column(String(50), nullable=False)  # character, story, script, etc.
+    structure = Column(JSON)  # Template structure definition
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    productions = relationship("ContentProduction", back_populates="template")
+
+class Script(Base):
+    __tablename__ = "scripts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    character_id = Column(Integer, ForeignKey("islamic_characters.id"))
+    writer_id = Column(Integer, ForeignKey("team_members.id"))
+    status = Column(String(50), default="draft")  # draft, review, approved, final
+    word_count = Column(Integer)
+    estimated_duration = Column(Integer)  # in minutes
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    character = relationship("IslamicCharacter")
+    writer = relationship("TeamMember")
+    productions = relationship("ContentProduction", back_populates="script")
+
+class Illustration(Base):
+    __tablename__ = "illustrations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    image_url = Column(String(500))
+    character_id = Column(Integer, ForeignKey("islamic_characters.id"))
+    artist_id = Column(Integer, ForeignKey("team_members.id"))
+    production_id = Column(Integer, ForeignKey("content_productions.id"))
+    status = Column(String(50), default="draft")  # draft, review, approved, final
+    style = Column(String(100))
+    scene_description = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    character = relationship("IslamicCharacter")
+    artist = relationship("TeamMember")
+    productions = relationship("ContentProduction", back_populates="illustrations")
+
+class VoiceRecording(Base):
+    __tablename__ = "voice_recordings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    audio_url = Column(String(500))
+    script_id = Column(Integer, ForeignKey("scripts.id"))
+    voice_actor_id = Column(Integer, ForeignKey("team_members.id"))
+    production_id = Column(Integer, ForeignKey("content_productions.id"))
+    status = Column(String(50), default="draft")  # draft, review, approved, final
+    duration = Column(Integer)  # in seconds
+    language = Column(String(10), default="ar")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    script = relationship("Script")
+    voice_actor = relationship("TeamMember")
+    productions = relationship("ContentProduction", back_populates="voice_recordings")
+
+class Animation(Base):
+    __tablename__ = "animations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    animation_url = Column(String(500))
+    character_id = Column(Integer, ForeignKey("islamic_characters.id"))
+    animator_id = Column(Integer, ForeignKey("team_members.id"))
+    production_id = Column(Integer, ForeignKey("content_productions.id"))
+    status = Column(String(50), default="draft")  # draft, review, approved, final
+    duration = Column(Integer)  # in seconds
+    style = Column(String(100))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    character = relationship("IslamicCharacter")
+    animator = relationship("TeamMember")
+    productions = relationship("ContentProduction", back_populates="animations")
+
+class ContentProduction(Base):
+    __tablename__ = "content_productions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    character_id = Column(Integer, ForeignKey("islamic_characters.id"))
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    template_id = Column(Integer, ForeignKey("content_templates.id"))
+    script_id = Column(Integer, ForeignKey("scripts.id"))
+    status = Column(String(50), default="idea")  # idea, scripting, illustration, voice_recording, animation, review, published
+    priority = Column(String(20), default="medium")
+    target_audience = Column(String(100))
+    estimated_completion = Column(DateTime(timezone=True))
+    created_by_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    character = relationship("IslamicCharacter")
+    project = relationship("Project", back_populates="productions")
+    template = relationship("ContentTemplate", back_populates="productions")
+    script = relationship("Script", back_populates="productions")
+    illustrations = relationship("Illustration", back_populates="productions")
+    voice_recordings = relationship("VoiceRecording", back_populates="productions")
+    animations = relationship("Animation", back_populates="productions")
+    publications = relationship("Publication", back_populates="production")
+    creator = relationship("User")
+
+class PublishingPlatform(Base):
+    __tablename__ = "publishing_platforms"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text)
+    platform_type = Column(String(50))  # web, mobile, social, print
+    api_config = Column(JSON)  # Platform-specific configuration
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    publications = relationship("Publication", back_populates="platform")
+
+class Publication(Base):
+    __tablename__ = "publications"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    production_id = Column(Integer, ForeignKey("content_productions.id"))
+    platform_id = Column(Integer, ForeignKey("publishing_platforms.id"))
+    published_url = Column(String(500))
+    published_at = Column(DateTime(timezone=True))
+    status = Column(String(50), default="scheduled")  # scheduled, published, archived
+    platform_data = Column(JSON)  # Platform-specific metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    production = relationship("ContentProduction", back_populates="publications")
+    platform = relationship("PublishingPlatform", back_populates="publications")

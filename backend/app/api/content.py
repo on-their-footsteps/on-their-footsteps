@@ -102,6 +102,50 @@ async def get_featured_by_category(
         ))
     return response_characters
 
+@router.get("/featured/raw")
+async def get_featured_raw(db: Session = Depends(get_db)):
+    """Get featured characters as raw data (no response model validation)"""
+    characters = db.query(IslamicCharacter).filter(
+        IslamicCharacter.is_featured == True
+    ).order_by(IslamicCharacter.name).limit(6).all()
+    
+    raw_data = []
+    for char in characters:
+        raw_data.append({
+            "id": char.id,
+            "name": char.name,
+            "arabic_name": char.arabic_name,
+            "title": char.title,
+            "description": char.description,
+            "category": char.category,
+            "era": char.era,
+            "profile_image": char.profile_image,
+            "views_count": char.views_count,
+            "likes_count": char.likes_count,
+            "is_featured": char.is_featured,
+            "is_verified": char.is_verified
+        })
+    
+    return raw_data
+
+@router.get("/debug/featured")
+async def debug_featured(db: Session = Depends(get_db)):
+    """Debug endpoint to check featured characters"""
+    all_chars = db.query(IslamicCharacter).all()
+    featured_chars = db.query(IslamicCharacter).filter(IslamicCharacter.is_featured == True).all()
+    
+    return {
+        "total_characters": len(all_chars),
+        "featured_characters": len(featured_chars),
+        "featured_details": [
+            {
+                "id": char.id,
+                "name": char.name,
+                "is_featured": char.is_featured
+            } for char in featured_chars
+        ]
+    }
+
 @router.get("/featured/general", response_model=List[CharacterResponse])
 async def get_featured_general(
     limit: int = Query(6, le=10),
@@ -111,6 +155,11 @@ async def get_featured_general(
     characters = db.query(IslamicCharacter).filter(
         IslamicCharacter.is_featured == True
     ).order_by(IslamicCharacter.name).limit(limit).all()
+    
+    # Debug logging
+    print(f"Found {len(characters)} featured characters")
+    for char in characters:
+        print(f"Character: {char.name}, featured: {char.is_featured}")
     
     # Convert to response models
     response_characters = []
@@ -136,6 +185,8 @@ async def get_featured_general(
             verification_notes=getattr(char, 'verification_notes', None),
             created_at=getattr(char, 'created_at', datetime.now())
         ))
+    
+    print(f"Returning {len(response_characters)} response characters")
     return response_characters
 
 @router.get("/timeline/all")

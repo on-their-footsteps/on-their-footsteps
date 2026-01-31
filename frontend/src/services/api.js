@@ -145,9 +145,9 @@ const apiRequest = async (method, endpoint, data = null, options = {}) => {
   }
   
   // Create request promise
-  const requestPromise = retry ? retryRequest(config) : api(config)
+  const requestPromise = (retry ? retryRequest(config) : api(config))
     .then(response => ({ data: response.data, cached: false }))
-    .catch(error => {
+    .catch(async (error) => {
       // Enhanced error handling
       if (error.response) {
         // Server responded with error status

@@ -1,0 +1,44 @@
+## Build and Output
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+
+## IDE - Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+## IDE - Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+## IDE - JetBrains Rider
+.idea/
+*.sln.iml
+
+## Packages and Dependencies
+node_modules/
+jspm_packages/
+# Restore artifacts
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## OS-specific
+.DS_Store
+Thumbs.db
+
+## User-specific / Secrets
+*.user
+*.suo
+*.userprefs
+appsettings.Development.json
+# Note: Keep appsettings.json, but ignore secrets
+usersecrets.json

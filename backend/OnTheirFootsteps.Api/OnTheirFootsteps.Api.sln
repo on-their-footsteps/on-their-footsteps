@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnTheirFootsteps.Api", "OnTheirFootsteps.Api.csproj", "{A548D0EC-FD2A-0C8B-12C7-2E6E244EB4EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A548D0EC-FD2A-0C8B-12C7-2E6E244EB4EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A548D0EC-FD2A-0C8B-12C7-2E6E244EB4EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A548D0EC-FD2A-0C8B-12C7-2E6E244EB4EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A548D0EC-FD2A-0C8B-12C7-2E6E244EB4EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {22B5A6C2-E277-403E-B9C2-EB088243F01B}
+	EndGlobalSection
+EndGlobal

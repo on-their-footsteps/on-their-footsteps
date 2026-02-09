@@ -41,8 +41,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
             entity.Property(e => e.FullImageUrl).HasMaxLength(500);
             entity.Property(e => e.PlaceOfBirth).HasMaxLength(100);
             entity.Property(e => e.PlaceOfDeath).HasMaxLength(100);
-            entity.Property(e => e.Views).HasDefaultValue(0);
-            entity.Property(e => e.Likes).HasDefaultValue(0);
+            entity.Property(e => e.ViewsCount).HasDefaultValue(0);
+            entity.Property(e => e.LikesCount).HasDefaultValue(0);
             entity.Property(e => e.IsFeatured).HasDefaultValue(false);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -58,7 +58,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
         modelBuilder.Entity<User>(entity =>
         {
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.FullName).HasMaxLength(100);
             entity.Property(e => e.ArabicName).HasMaxLength(100);
             entity.Property(e => e.ProfileImage).HasMaxLength(500);
@@ -92,7 +92,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
             .HasDatabaseName("ix_users_email");
 
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.Username)
+            .HasIndex(u => u.UserName)
             .IsUnique()
             .HasDatabaseName("ix_users_username");
     }

@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
             {
                 Success = false,
                 Message = "Invalid request data",
-                Errors = ModelState.Values.SelectMany(v => v.Errors).ToList()
+                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(c=>c.ErrorMessage)).ToList()
             });
         }
 
@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
             {
                 Success = false,
                 Message = "Invalid request data",
-                Errors = ModelState.Values.SelectMany(v => v.Errors).ToList()
+                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(c => c.ErrorMessage)).ToList()
             });
         }
 
@@ -223,7 +223,7 @@ public class AuthController : ControllerBase
                 });
             }
 
-            var user = await _userManager.FindByIdAsync(int.Parse(userId));
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound(new UserProfileResponseDto

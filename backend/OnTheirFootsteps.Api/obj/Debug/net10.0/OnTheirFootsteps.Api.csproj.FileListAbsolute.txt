@@ -1,9 +1,0 @@
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.csproj.AssemblyReference.cache
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\rpswa.dswa.cache.json
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.GeneratedMSBuildEditorConfig.editorconfig
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.AssemblyInfoInputs.cache
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.AssemblyInfo.cs
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.csproj.CoreCompileInputs.cache
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.MvcApplicationPartsAssemblyInfo.cs
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.MvcApplicationPartsAssemblyInfo.cache
-D:\on-their-footsteps\backend\OnTheirFootsteps.Api\obj\Debug\net10.0\OnTheirFootsteps.Api.sourcelink.json

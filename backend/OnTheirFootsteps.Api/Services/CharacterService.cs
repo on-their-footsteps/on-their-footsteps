@@ -328,7 +328,7 @@ public class CharacterService : ICharacterService
             var view = new CharacterView
             {
                 CharacterId = characterId,
-                UserId = userId,
+                UserId = userId.GetValueOrDefault(),
                 IpAddress = ipAddress,
                 CreatedAt = DateTime.UtcNow
             };

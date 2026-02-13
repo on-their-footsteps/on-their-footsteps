@@ -175,7 +175,7 @@ dotnet publish -c Release
 - `POST /api/auth/login` - تسجيل الدخول
 - `POST /api/auth/register` - إنشاء حساب جديد
 - `POST /api/auth/logout` - تسجيل الخروج
-- `GET /api/auth/profile` - جلب الملف الشخصي
+- `GET /api/auth/me` - جلب الملف الشخصي
 
 ### الشخصيات
 - `GET /api/characters` - جلب كل الشخصيات

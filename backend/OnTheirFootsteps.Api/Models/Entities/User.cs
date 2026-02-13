@@ -11,12 +11,12 @@ public class User : IdentityUser<int>
     [Required]
     [EmailAddress]
     [MaxLength(255)]
-    public new string Email { get; set; } = string.Empty;
+    public override string Email { get; set; } = string.Empty;
 
     [Required]
     [MinLength(3)]
     [MaxLength(50)]
-    public new string UserName { get; set; } = string.Empty;
+    public override string UserName { get; set; } = string.Empty;
 
     [MaxLength(100)]
     public string FullName { get; set; } = string.Empty;

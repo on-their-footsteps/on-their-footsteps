@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using OnTheirFootsteps.Api.Data;
 using OnTheirFootsteps.Api.Extensions;
 using OnTheirFootsteps.Api.Middleware;
-using OnTheirFootsteps.Api.Services;
 using Serilog;
 using System.Text;
-using System.Text.Json.Serialization;
-
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using AutoMapper;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
@@ -26,18 +27,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo
+        c.SwaggerDoc("v2", new OpenApiInfo
         {
             Version = "v2",
             Title = "على خطاهم API",
             Description = "Educational platform for Islamic historical figures and characters",
             TermsOfService = new Uri("https://example.com/terms"),
-            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            Contact = new OpenApiContact
             {
                 Name = "Support",
                 Email = "support@ontheirfootsteps.com"
             },
-            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            License = new OpenApiLicense
             {
                 Name = "MIT",
                 Url = new Uri("https://opensource.org/licenses/MIT")
@@ -51,14 +52,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Configure Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer("CustomBearer", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidateAudience = builder.Configuration["Jwt:Audience"],
+            ValidateIssuer = true,
+            ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
             ClockSkew = TimeSpan.Zero
         };
@@ -80,24 +83,27 @@ builder.Services.AddCors(options =>
 });
 
 // Configure Redis Cache
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-});
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+//});
 
 // Configure AutoMapper
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+//builder.Services.AddAutoMapper();
 
 // Configure Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = PartitionedRateLimiter.Create<string, HttpContext>(options =>
-    {
-        options.PermitLimit = 100;
-        options.Window = TimeSpan.FromSeconds(60);
-        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        options.SegmentsPerWindow = 1;
-    });
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 10,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
 });
 
 // Add services to the container

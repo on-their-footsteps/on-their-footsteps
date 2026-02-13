@@ -1,377 +1,194 @@
-# 🚀 OnTheirFootsteps Backend - .NET Core 10.0
+# On Their Footsteps - N-Tier .NET Backend
 
-ASP.NET Core 10.0 Web API following N-Tier architecture for the "On Their Footsteps" Islamic historical figures educational platform.
+This is a clean N-tier architecture .NET 10 backend for the "On Their Footsteps" application.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
-### N-Tier Architecture
-```
-OnTheirFootsteps.Api/
-├── Application/           # Application Layer (Use Cases)
-│   ├── Commands/        # Write operations (CQRS Commands)
-│   ├── Queries/         # Read operations (CQRS Queries)
-│   └── DTOs/           # Request/Response models
-├── Domain/              # Domain Layer (Business Logic)
-│   ├── Entities/       # Rich domain models
-│   ├── ValueObjects/   # Immutable value types
-│   └── Services/       # Domain services
-├── Infrastructure/      # Infrastructure Layer (External Concerns)
-│   ├── Data/           # EF Core, Repositories
-│   ├── Identity/       # ASP.NET Identity implementation
-│   └── Media/          # File storage services
-├── Common/              # Shared Layer (Cross-cutting)
-│   ├── Extensions/      # Common extensions
-│   ├── Exceptions/      # Custom exceptions
-│   └── Utilities/      # Shared utilities
-├── Presentation/        # Presentation Layer (API)
-│   ├── Controllers/     # API Controllers
-│   ├── Middleware/      # Custom middleware
-│   └── Filters/         # Action filters
-└── Configuration/       # Configuration
-    ├── Program.cs        # Application entry point
-    └── appsettings.json # Application settings
-```
+The solution follows a clean N-tier architecture with clear separation of concerns:
 
-### Technology Stack
-- **Framework**: ASP.NET Core 10.0
-- **Language**: C# 12
-- **Architecture**: N-Tier with Clean Architecture principles
-- **Database**: PostgreSQL with Entity Framework Core
-- **Authentication**: JWT Bearer with ASP.NET Identity
-- **CQRS**: Command Query Responsibility Segregation
-- **Documentation**: Swagger/OpenAPI 3.0
-- **Testing**: xUnit + Moq
-- **Logging**: Serilog
-- **Containerization**: Docker + Docker Compose
+### Layers
 
-## 🛠️ Prerequisites
+1. **Domain Layer** (`OnTheirFootsteps.Domain`)
+   - Core business entities (Character, Story, Comment)
+   - Domain interfaces (IRepository, ICharacterRepository, IStoryRepository)
+   - No external dependencies
 
+2. **Application Layer** (`OnTheirFootsteps.Application`)
+   - Business logic and services
+   - DTOs for data transfer
+   - Service interfaces and implementations
+   - Unit of Work pattern
+
+3. **Infrastructure Layer** (`OnTheirFootsteps.Infrastructure`)
+   - Entity Framework Core implementation
+   - Repository pattern implementation
+   - Database context and migrations
+   - External dependencies
+
+4. **API Layer** (`OnTheirFootsteps.Api`)
+   - Web API controllers
+   - Dependency injection configuration
+   - Swagger/OpenAPI documentation
+   - CORS configuration
+
+## Features
+
+- **Character Management**: CRUD operations for historical characters
+- **Story Management**: Stories linked to characters with publishing workflow
+- **Comment System**: Comments on stories with approval workflow
+- **Entity Framework Core**: Database operations with SQL Server
+- **Repository Pattern**: Clean data access abstraction
+- **Unit of Work**: Transaction management
+- **DTOs**: Clean data transfer between layers
+- **Swagger API Documentation**: Auto-generated API docs
+
+## Getting Started
+
+### Prerequisites
 - .NET 10.0 SDK
-- PostgreSQL 15+
-- Visual Studio 2022 or VS Code
-- Git
-- Docker (optional, for containerized deployment)
+- SQL Server or SQL Server LocalDB
 
-## 🚀 Quick Start
+### Configuration
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/on-their-footsteps/on-their-footsteps.git
-cd on-their-footsteps/backend
-```
-
-### 2. Database Setup
-```bash
-# Create PostgreSQL database
-createdb on_their_footsteps
-
-# Update connection string in appsettings.json
-```
-
-### 3. Install Dependencies
-```bash
-cd OnTheirFootsteps.Api
-dotnet restore
-```
-
-### 4. Database Migrations
-```bash
-# Create initial migration
-dotnet ef migrations add InitialCreate
-
-# Apply migrations
-dotnet ef database update
-```
-
-### 5. Run Application
-```bash
-dotnet run
-```
-
-### 6. Access API
-- **API Base URL**: http://localhost:5000
-- **Swagger UI**: http://localhost:5000/swagger
-- **Health Check**: http://localhost:5000/health
-
-## ⚙️ Configuration
-
-### appsettings.json
+1. Update the connection string in `appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=on_their_footsteps;Username=postgres;Password=your_password"
-  },
-  "Jwt": {
-    "Key": "your-secret-key-here",
-    "Issuer": "OnTheirFootsteps",
-    "Audience": "OnTheirFootsteps",
-    "ExpirationMinutes": 60
-  },
-  "AllowedOrigins": "http://localhost:3000,http://localhost:3001",
-  "FileUpload": {
-    "UploadPath": "wwwroot/uploads",
-    "MaxFileSize": 10485760,
-    "AllowedExtensions": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
-  },
-  "RateLimit": {
-    "MaxRequests": 100,
-    "WindowMinutes": 1
-  },
-  "Serilog": {
-    "MinimumLevel": "Information",
-    "WriteTo": ["Console", "File"]
+    "DefaultConnection": "Server=your_server;Database=OnTheirFootstepsDb;Trusted_Connection=true;MultipleActiveResultSets=true"
   }
 }
 ```
 
-## 📚 API Documentation
+2. Run database migrations (once .NET CLI is available):
+```bash
+dotnet ef database update
+```
 
-### Authentication Endpoints
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/profile` - Get user profile
-- `POST /api/auth/forgot-password` - Forgot password
-- `POST /api/auth/reset-password` - Reset password
+### Running the Application
 
-### Character Endpoints
+```bash
+cd src/OnTheirFootsteps.Api
+dotnet run
+```
+
+The API will be available at `https://localhost:7123` and Swagger UI at `https://localhost:7123/swagger`.
+
+## API Endpoints
+
+### Characters
 - `GET /api/characters` - Get all characters
+- `GET /api/characters/active` - Get active characters only
+- `GET /api/characters/period/{period}` - Get characters by historical period
 - `GET /api/characters/{id}` - Get character by ID
-- `GET /api/characters/slug/{slug}` - Get character by slug
-- `POST /api/characters` - Create character (Admin)
-- `PUT /api/characters/{id}` - Update character (Admin)
-- `DELETE /api/characters/{id}` - Delete character (Admin)
-- `GET /api/characters/featured` - Get featured characters
-- `POST /api/characters/search` - Search characters
-- `POST /api/characters/{id}/like` - Like character
-- `DELETE /api/characters/{id}/like` - Unlike character
-- `POST /api/characters/{id}/view` - Increment views
+- `POST /api/characters` - Create new character
+- `PUT /api/characters/{id}` - Update character
+- `DELETE /api/characters/{id}` - Delete character
 
-### Content Endpoints
-- `GET /api/content/categories` - Get categories
-- `GET /api/content/categories/{id}` - Get category by ID
-- `GET /api/content/eras` - Get eras
-- `GET /api/content/eras/{id}` - Get era by ID
+### Stories
+- `GET /api/stories/published` - Get published stories
+- `GET /api/stories/popular` - Get popular stories
+- `GET /api/stories/character/{characterId}` - Get stories by character
+- `GET /api/stories/{id}` - Get story by ID
 
-### Media Endpoints
-- `POST /api/media/upload` - Upload file
-- `DELETE /api/media/{url}` - Delete file
-- `GET /api/media` - Get media files (Admin)
+## Database Schema
 
-### Analytics Endpoints
-- `POST /api/analytics/events` - Track event
-- `POST /api/analytics/pageview` - Track page view
-- `GET /api/analytics` - Get analytics (Admin)
+### Characters
+- Id (Guid)
+- Name (string)
+- Description (string)
+- HistoricalPeriod (string)
+- Location (string)
+- ImageUrl (string)
+- IsActive (bool)
+- Audit fields (CreatedAt, UpdatedAt, CreatedBy, UpdatedBy)
 
-## 🏗️ N-Tier Architecture Benefits
+### Stories
+- Id (Guid)
+- Title (string)
+- Content (string)
+- Summary (string)
+- PublishedAt (DateTime)
+- IsPublished (bool)
+- ViewCount (int)
+- CharacterId (Guid, FK)
+- Audit fields
 
-### Separation of Concerns
-- **Presentation Layer**: Handles HTTP requests/responses
-- **Application Layer**: Implements use cases and business rules
-- **Domain Layer**: Contains core business logic and entities
-- **Infrastructure Layer**: Handles external concerns (database, file storage)
-- **Common Layer**: Shared utilities and extensions
+### Comments
+- Id (Guid)
+- Content (string)
+- AuthorName (string)
+- AuthorEmail (string)
+- IsApproved (bool)
+- StoryId (Guid, FK)
+- Audit fields
 
-### CQRS Pattern
-- **Commands**: Write operations (Create, Update, Delete)
-- **Queries**: Read operations optimized for different scenarios
-- **Separate Handlers**: Optimized for specific operations
+## Docker Deployment
 
-### Clean Architecture Principles
-- **Dependency Inversion**: High-level modules don't depend on low-level modules
-- **Single Responsibility**: Each class has one reason to change
-- **Open/Closed**: Open for extension, closed for modification
-- **Interface Segregation**: Clients don't depend on unused interfaces
-- **Dependency Inversion**: Depend on abstractions, not concretions
+### Prerequisites
+- Docker Desktop for Windows
+- Docker Compose
 
-## 🧪 Testing
+### Quick Start
 
-### Run Tests
+1. **Using the startup script:**
+   ```bash
+   # Windows
+   docker-start.bat
+   
+   # Linux/Mac
+   ./docker-start.sh
+   ```
+
+2. **Manual start:**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Background mode:**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+### Services
+
+- **Backend**: `http://localhost:5000` (.NET 10 API)
+- **Frontend**: `http://localhost:3000` (React development server)
+- **Database**: SQL Server on port 1433
+- **Redis**: On port 6379
+- **Nginx**: `http://localhost:80` (production proxy)
+
+### Database Configuration
+
+The Docker setup uses SQL Server with these credentials:
+- **Server**: localhost,1433
+- **Database**: OnTheirFootstepsDb
+- **User**: sa
+- **Password**: Footsteps123!
+
+### Development Override
+
+Use `docker-compose.override.yml` for development settings:
+- Hot reload enabled
+- Development environment variables
+- Volume mounts for live code changes
+
+### Stopping Services
+
 ```bash
-dotnet test
+docker-compose down
 ```
 
-### Test Structure
-```
-Tests/
-├── Application/
-│   ├── Commands/
-│   │   ├── CreateCharacterCommandTests.cs
-│   │   └── UpdateCharacterCommandTests.cs
-│   └── Queries/
-│       ├── GetCharacterByIdQueryTests.cs
-│       └── GetCharactersQueryTests.cs
-├── Domain/
-│   ├── Entities/
-│   │   ├── CharacterTests.cs
-│   │   └── UserTests.cs
-│   └── Services/
-│       └── DomainServiceTests.cs
-├── Infrastructure/
-│   ├── Data/
-│   │   └── RepositoryTests.cs
-│   └── Identity/
-│       └── AuthServiceTests.cs
-└── Integration/
-    ├── ApiIntegrationTests.cs
-    └── DatabaseIntegrationTests.cs
-```
+### Viewing Logs
 
-## 🚀 Deployment
-
-### Development
 ```bash
-dotnet run --environment Development
-```
-
-### Production
-```bash
-dotnet publish -c Release -o ./publish
-```
-
-### Docker
-```bash
-# Build image
-docker build -t ontheirfootsteps-api .
-
-# Run with compose
-docker-compose up -d
-
-# View logs
 docker-compose logs -f
 ```
 
-## 🔧 Development Commands
+## Development Notes
 
-### Entity Framework
-```bash
-# Add migration
-dotnet ef migrations add MigrationName
-
-# Update database
-dotnet ef database update
-
-# Remove last migration
-dotnet ef migrations remove
-
-# Generate SQL script
-dotnet ef migrations script
-```
-
-### Build & Run
-```bash
-# Build project
-dotnet build
-
-# Run project
-dotnet run
-
-# Run with specific environment
-dotnet run --environment Production
-
-# Watch for changes
-dotnet watch
-```
-
-### Code Quality
-```bash
-# Format code
-dotnet format
-
-# Analyze code
-dotnet analyze
-
-# Restore packages
-dotnet restore
-```
-
-## 🛡️ Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **ASP.NET Identity**: User management and password hashing
-- **Rate Limiting**: API protection against abuse
-- **CORS**: Cross-origin resource sharing configuration
-- **Input Validation**: Comprehensive model validation
-- **SQL Injection Protection**: Entity Framework parameterized queries
-- **HTTPS Enforcement**: SSL/TLS in production
-- **Authorization**: Role-based access control
-
-## 📊 Performance Features
-
-- **Response Caching**: In-memory and distributed caching
-- **Database Indexing**: Optimized query performance
-- **Async/Await**: Non-blocking I/O operations
-- **Connection Pooling**: Efficient database connections
-- **Lazy Loading**: Optimized data loading
-- **Compression**: GZIP response compression
-- **CQRS Optimization**: Separate read/write models
-
-## 📝 Logging & Monitoring
-
-- **Serilog**: Structured logging with multiple sinks
-- **Request Logging**: HTTP request/response logging
-- **Error Handling**: Centralized exception handling
-- **Health Checks**: Application health monitoring
-- **Performance Metrics**: Request timing and analytics
-- **Application Insights**: Azure monitoring integration
-
-## 🔄 Version Control & CI/CD
-
-- **Git**: Source control management
-- **Semantic Versioning**: Automated version bumping
-- **GitHub Actions**: Automated build and deployment
-- **Code Review**: Pull request workflow
-- **Automated Testing**: CI pipeline with test coverage
-
-## 🌐 Container Support
-
-### Docker Configuration
-- **Multi-stage builds**: Optimized production images
-- **Base images**: Official .NET runtime
-- **Health checks**: Built-in container health monitoring
-- **Environment variables**: Flexible configuration
-- **Volume mounting**: Persistent data storage
-
-### Docker Compose
-- **PostgreSQL**: Database service
-- **Redis**: Caching service (optional)
-- **Nginx**: Reverse proxy with SSL termination
-- **Application**: .NET API service
-- **Networking**: Internal service communication
-
-## 📞 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Email: support@ontheirfootsteps.com
-- Documentation: https://docs.ontheirfootsteps.com
-
-## 📄 License
-
-This project is licensed under MIT License - see LICENSE file for details.
-
-## 🎯 Architecture Decision Records (ADRs)
-
-### ADR-001: N-Tier Architecture
-**Decision**: Adopt N-Tier architecture with clean architecture principles
-**Status**: Accepted
-**Consequences**: 
-- Improved maintainability and testability
-- Clear separation of concerns
-- Better support for scaling individual layers
-
-### ADR-002: CQRS Pattern
-**Decision**: Implement CQRS for command/query separation
-**Status**: Accepted
-**Consequences**:
-- Optimized read/write operations
-- Better performance for complex queries
-- Clearer intent in code
-
-### ADR-003: Entity Framework Core
-**Decision**: Use EF Core for data access
-**Status**: Accepted
-**Consequences**:
-- Rapid development with migrations
-- Strong typing and LINQ support
-- Cross-platform database support
+- The solution uses clean architecture principles with dependency injection
+- Entity Framework Core handles database operations
+- Repository pattern provides abstraction over data access
+- DTOs prevent over-posting and provide clean API contracts
+- Swagger documentation is automatically generated
+- CORS is configured for frontend integration

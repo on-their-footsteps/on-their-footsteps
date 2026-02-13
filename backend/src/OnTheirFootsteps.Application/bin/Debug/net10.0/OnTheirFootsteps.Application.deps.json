@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "OnTheirFootsteps.Application/1.0.0": {
+        "dependencies": {
+          "OnTheirFootsteps.Domain": "1.0.0"
+        },
+        "runtime": {
+          "OnTheirFootsteps.Application.dll": {}
+        }
+      },
+      "OnTheirFootsteps.Domain/1.0.0": {
+        "runtime": {
+          "OnTheirFootsteps.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "OnTheirFootsteps.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "OnTheirFootsteps.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -1,0 +1,12 @@
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\bin\Debug\net10.0\OnTheirFootsteps.Domain.deps.json
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\bin\Debug\net10.0\OnTheirFootsteps.Domain.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\bin\Debug\net10.0\OnTheirFootsteps.Domain.pdb
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.AssemblyInfoInputs.cache
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.AssemblyInfo.cs
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.csproj.CoreCompileInputs.cache
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.sourcelink.json
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\refint\OnTheirFootsteps.Domain.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\OnTheirFootsteps.Domain.pdb
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Domain\obj\Debug\net10.0\ref\OnTheirFootsteps.Domain.dll

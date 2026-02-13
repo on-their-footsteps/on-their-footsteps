@@ -11,6 +11,7 @@ import Layout from './components/layout/Layout';
 import Companion from './components/common/Companion';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ApiTest from './components/ApiTest.jsx';
 
 // Pages
 import Home from './pages/Home';
@@ -53,6 +54,7 @@ const App: React.FC<AppProps> = () => {
                 <Layout>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/api-test" element={<ApiTest />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/profile" element={

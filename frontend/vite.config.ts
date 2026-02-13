@@ -56,21 +56,8 @@ export default defineConfig({
           // Vendor chunks
           vendor: ['react', 'react-dom', 'react-router-dom'],
           router: ['react-router-dom'],
-          ui: ['@headlessui/react', '@heroicons/react'],
+          ui: ['@heroicons/react', 'lucide-react'],
           utils: ['axios', 'date-fns', 'clsx'],
-          
-          // Feature chunks
-          auth: ['./src/context/AuthContext'],
-          cache: ['./src/utils/cacheManager'],
-          api: ['./src/services/api'],
-          
-          // Page chunks
-          pages: [
-            './src/pages/Home',
-            './src/pages/Characters',
-            './src/pages/CharacterDetail',
-            './src/pages/Admin'
-          ].map(path => path.resolve(__dirname, path))
         }
       },
       chunkSizeWarningLimit: 1000, // 1MB

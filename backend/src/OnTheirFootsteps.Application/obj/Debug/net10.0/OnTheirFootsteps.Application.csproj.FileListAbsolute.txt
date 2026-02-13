@@ -1,0 +1,16 @@
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.csproj.AssemblyReference.cache
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.AssemblyInfoInputs.cache
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.AssemblyInfo.cs
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.csproj.CoreCompileInputs.cache
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.sourcelink.json
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\bin\Debug\net10.0\OnTheirFootsteps.Application.deps.json
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\bin\Debug\net10.0\OnTheirFootsteps.Application.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\bin\Debug\net10.0\OnTheirFootsteps.Application.pdb
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\bin\Debug\net10.0\OnTheirFootsteps.Domain.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\bin\Debug\net10.0\OnTheirFootsteps.Domain.pdb
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirF.6D3E24E4.Up2Date
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\refint\OnTheirFootsteps.Application.dll
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\OnTheirFootsteps.Application.pdb
+D:\on-their-footsteps\backend\src\OnTheirFootsteps.Application\obj\Debug\net10.0\ref\OnTheirFootsteps.Application.dll

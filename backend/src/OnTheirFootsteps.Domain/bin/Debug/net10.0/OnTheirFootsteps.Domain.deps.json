@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "OnTheirFootsteps.Domain/1.0.0": {
+        "runtime": {
+          "OnTheirFootsteps.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "OnTheirFootsteps.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -21,23 +21,24 @@
 - **الحالة**: React Context + Hooks
 - **الطلبات**: Axios مع إدارة التخزين المؤقت
 
-### الخادم (Backend) - 🆕 .NET Core 10.0
+### الخادم (Backend) - 🆕 N-Tier .NET 10
 - **التقنية**: ASP.NET Core 10.0 + C#
-- **قاعدة البيانات**: Entity Framework Core + PostgreSQL
+- **قاعدة البيانات**: Entity Framework Core + SQL Server
 - **المصادقة**: JWT + ASP.NET Identity
 - **الوثائق**: Swagger/OpenAPI 3.0
-- **الأداء**: عالي الأداء مع نوعية قوية
+- **الطبقات**: N-Tier Architecture (Domain, Application, Infrastructure, API)
 
 ## 🛠️ المتطلبات الأساسية
 
 ### الخادم (Backend)
 - .NET 10.0 SDK
-- PostgreSQL 15+ (أو SQL Server)
-- Redis 7+ (اختياري للتخزين المؤقت)
+- SQL Server 2019+ أو SQL Server LocalDB
+- Visual Studio 2022 أو Visual Studio Code
 
 ### الواجهة الأمامية (Frontend)
 - Node.js 18+
 - npm 9+ أو yarn 1.22+
+- متصفح حديث يدعم React 18
 
 ## 🚀 دليل التثبيت
 
@@ -52,7 +53,7 @@ cd on-their-footsteps
 #### تثبيت .NET SDK
 ```bash
 # Windows
-# قم بتنزيل .NET 10.0 SDK من https://dotnet.microsoft.com/download
+# قم بتثبيت .NET 10.0 SDK من https://dotnet.microsoft.com/download
 
 # Linux/macOS
 # استخدم مدير الحزم لتثبيت .NET 10.0 SDK
@@ -60,51 +61,18 @@ cd on-their-footsteps
 
 #### إعداد قاعدة البيانات
 ```bash
-# تثبيت PostgreSQL (إذا لم يكن مثبتًا)
-# Windows: قم بتنزيل من postgresql.org
-# Linux: sudo apt-get install postgresql postgresql-contrib
-# macOS: brew install postgresql
-
-# إنشاء قاعدة البيانات
-createdb on_their_footsteps
-```
-
-#### تشغيل الترحيلات
-```bash
-# الانتقال إلى مجلد الخادم
-cd backend/OnTheirFootsteps.Api
-
-# إنشاء الترحيلات الأولية
-dotnet ef migrations add InitialCreate
-
-# تطبيق الترحيلات على قاعدة البيانات
-dotnet ef database update
-```
-
-#### إعدادات الاتصال
-```json
-// backend/OnTheirFootsteps.Api/appsettings.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=on_their_footsteps;Username=postgres;Password=your_password"
-  },
-  "Jwt": {
-    "Key": "your-secret-key-here",
-    "Issuer": "OnTheirFootsteps",
-    "Audience": "OnTheirFootsteps",
-    "ExpirationMinutes": 60
-  }
-}
+# Windows: استخدم SQL Server Management Studio
+# Linux: استخدم sqlcmd
+# macOS: استخدم Azure Data Studio
 ```
 
 #### تشغيل الخادم
 ```bash
-cd backend/OnTheirFootsteps.Api
-dotnet run
+cd backend
+dotnet run --project src/OnTheirFootsteps.Api
 ```
 
 ### 3. إعداد الواجهة الأمامية (Frontend)
-
 ```bash
 # تثبيت الحزم
 cd frontend
@@ -119,6 +87,28 @@ npm run dev
 - **الواجهة الأمامية**: http://localhost:3000
 - **الخادم API**: http://localhost:5000
 - **وثائق API**: http://localhost:5000/swagger
+- **اختبار الاتصال**: http://localhost:3000/api-test
+
+## 🐳 Docker (نشر حاويات)
+
+### التشغيل السريع
+```bash
+# Windows
+docker-start.bat
+
+# Linux/macOS
+./docker-start.sh
+
+# يدوي
+docker-compose up --build
+```
+
+### الخدمات المتاحة
+- **Backend**: `http://localhost:5000` (.NET 10 API)
+- **Frontend**: `http://localhost:3000` (React development server)
+- **قاعدة البيانات**: SQL Server على منفذ 1433
+- **Redis**: على منفذ 6379
+- **Nginx**: `http://localhost:80` (وكيل عكسي للإنتاج)
 
 ## 📁 بنية المجلدات
 
@@ -135,21 +125,22 @@ on-their-footsteps/
 │   ├── public/             # ملفات ثابتة
 │   └── package.json
 ├── backend/
-│   └── OnTheirFootsteps.Api/  # تطبيق .NET Core
-│       ├── Controllers/     # وحدات التحكم API
-│       ├── Services/        # منطق الأعمال
-│       ├── Models/          # النماذج و DTOs
-│       ├── Data/            # DbContext والترحيلات
-│       ├── Middleware/      # البرمجيات الوسيطة
-│       ├── Extensions/      # إضافات الخدمات
-│       └── Program.cs       # نقطة دخول التطبيق
+│   └── src/
+│       ├── OnTheirFootsteps.Domain/        # الطبقة الدومين (الكيانات والواجهات)
+│       ├── OnTheirFootsteps.Application/   # طبقة التطبيقات (الخدمات وDTOs)
+│       ├── OnTheirFootsteps.Infrastructure/ # طبقة البنية التحتية (قاعدة البيانات والمستودعات)
+│       └── OnTheirFootsteps.Api/          # طبقة API (وحدات التحكم)
+├── docker-compose.yml        # تكوين Docker
+├── Dockerfile.backend       # Docker للخادم
+├── Dockerfile.frontend      # Docker للواجهة الأمامية
 └── README.md
 ```
 
-## 🔧 تطوير الخادم (.NET)
+## 🧪 تطوير الخادم (.NET)
 
 ### إضافة ترحيل جديد
 ```bash
+cd backend
 dotnet ef migrations add MigrationName
 dotnet ef database update
 ```
@@ -164,12 +155,7 @@ dotnet test
 dotnet build
 ```
 
-### نشر المشروع
-```bash
-dotnet publish -c Release
-```
-
-## 🎯 نقاط النهاية الرئيسية للـ API
+## 🎯 نقاط API الرئيسية
 
 ### المصادقة
 - `POST /api/auth/login` - تسجيل الدخول
@@ -179,53 +165,65 @@ dotnet publish -c Release
 
 ### الشخصيات
 - `GET /api/characters` - جلب كل الشخصيات
+- `GET /api/characters/active` - جلب الشخصيات النشطة
+- `GET /api/characters/period/{period}` - جلب حسب العصر
 - `GET /api/characters/{id}` - جلب شخصية محددة
-- `POST /api/characters` - إنشاء شخصية جديدة (مدير)
-- `PUT /api/characters/{id}` - تحديث شخصية (مدير)
-- `DELETE /api/characters/{id}` - حذف شخصية (مدير)
+- `POST /api/characters` - إنشاء شخصية جديدة
+- `PUT /api/characters/{id}` - تحديث شخصية
+- `DELETE /api/characters/{id}` - حذف شخصية
 
-### المحتوى
-- `GET /api/content/categories` - جلب الفئات
-- `GET /api/content/eras` - جلب العصور
-- `GET /api/content/categories/{id}` - جلب فئة محددة
-
-### الوسائط
-- `POST /api/media/upload` - رفع ملف
-- `DELETE /api/media/{url}` - حذف ملف
-
-### التحليلات
-- `POST /api/analytics/events` - تتبع حدث
-- `POST /api/analytics/pageview` - تتبع زيارة صفحة
-- `GET /api/analytics` - جلب بيانات التحليل (مدير)
+### القصص
+- `GET /api/stories/published` - القصص المنشورة
+- `GET /api/stories/popular` - القصص الشائعة
+- `GET /api/stories/character/{id}` - قصص شخصية محددة
+- `GET /api/stories/{id}` - قصة محددة
+- `POST /api/stories` - إنشاء قصة جديدة
+- `PUT /api/stories/{id}` - تحديث قصة
+- `DELETE /api/stories/{id}` - حذف قصة
 
 ## 🌟 المميزات التقنية
 
 ### .NET Backend
-- ✅ **نوعية قوية**: تحقق من الأنواع في وقت الترجمة
-- ✅ **أداء عالي**: محسن للأداء مع التخزين المؤقت
+- ✅ **بنية نظيفة**: N-Tier Architecture مع فصل صحيح للمسؤوليات
+- ✅ **قواعد قوية**: Entity Framework Core مع SQL Server
 - ✅ **أمان**: مصادقة JWT مع ASP.NET Identity
-- ✅ **قابلية التوسع**: بنية نظيفة مع حقن التبعيات
 - ✅ **توثيق**: Swagger/OpenAPI تلقائي
 - ✅ **اختبارات**: دعم كامل للاختبارات
+- ✅ **أداء**: تحسين الأداء والتخزين المؤقت
+- ✅ **Docker**: دعم كامل للحاويات
 
 ### Frontend
 - ✅ **TypeScript**: أمان الأنواع في الواجهة الأمامية
 - ✅ **React Hooks**: إدارة الحالة الحديثة
 - ✅ **Tailwind CSS**: تصميم سريع ومتجاوب
 - ✅ **Vite**: بناء سريع وتطوير فوري
-- ✅ **Axios**: طلبات HTTP مع إدارة الأخطاء
+- ✅ **PWA**: دعم تطبيقات الويب التقدمية
+- ✅ **تحليل**: أداء وتتبع الأخطاء
+
+## 🔧 تطوير المشروع
+
+### بناء المشروع
+```bash
+dotnet build
+```
+
+### نشر المشروع
+```bash
+dotnet publish -c Release
+```
 
 ## 🤝 المساهمة في المشروع
 
 - إذا كنت ترغب في المساهمة في المشروع، يرجى قراءة ملف CONTRIBUTING.md
 - لا تتردد في تقديم طلبات السحب (pull requests) أو تقديم تقارير الأخطاء (issues)
+- جميع المساهمات مرحب بها سواء كانت تعليمات برمجية، توثيق، أو اقتراحات
 
 ## 📄 الترخيص
 
-هذا المشروع مرخص تحت ترخيص MIT - راجع ملف LICENSE للتفاصيل
+هذا المشروع مرخص تحت ترخيص MIT - راجع ملف LICENSE للتفاصيل.
 
 ## 🙏 الشكر والتقدير
 
-- جميع الشخصيات الإسلامية التي نستلهم منها القيم والمبادئ
+- جميع الشخصيات الإسلامية التي نستخدم منها القيم والمبادئ
 - المجتمع المفتوح الذي يساهم في تطوير البرمجيات
 - جميع المساهمين في هذا المشروع
